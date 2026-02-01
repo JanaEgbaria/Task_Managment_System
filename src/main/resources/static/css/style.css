@@ -1,0 +1,89 @@
+/* Task Manager - custom styling on top of Bootstrap 5 */
+
+:root {
+  --status-todo: #6c757d;
+  --status-in_progress: #0d6efd;
+  --status-done: #198754;
+  --priority-low: #6c757d;
+  --priority-medium: #fd7e14;
+  --priority-high: #dc3545;
+}
+
+body {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.navbar-brand {
+  font-size: 1.35rem;
+}
+
+#btn-add-task,
+#btn-add-task-empty {
+  font-weight: 500;
+}
+
+.card {
+  border-radius: 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.table th {
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+.badge.status-todo {
+  background-color: var(--status-todo);
+}
+
+.badge.status-in_progress {
+  background-color: var(--status-in_progress);
+}
+
+.badge.status-done {
+  background-color: var(--status-done);
+}
+
+.badge.priority-low {
+  background-color: var(--priority-low);
+}
+
+.badge.priority-medium {
+  background-color: var(--priority-medium);
+}
+
+.badge.priority-high {
+  background-color: var(--priority-high);
+}
+
+.toast-container {
+  z-index: 1090;
+}
+
+.modal-content {
+  border-radius: 0.5rem;
+  border: none;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.form-label {
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .table-responsive {
+    font-size: 0.875rem;
+  }
+
+  .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+  }
+}

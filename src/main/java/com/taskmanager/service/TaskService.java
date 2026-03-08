@@ -4,6 +4,8 @@ import com.taskmanager.controller.dto.TaskUpdateRequest;
 import com.taskmanager.model.Task;
 import com.taskmanager.model.TaskPriority;
 import com.taskmanager.model.TaskStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -20,6 +22,8 @@ public interface TaskService {
     Task getTaskById(Long id);
 
     List<Task> getAllTasks();
+
+    Page<Task> getAllTasks(Pageable pageable);
 
     List<Task> getTasksByStatus(TaskStatus status);
 

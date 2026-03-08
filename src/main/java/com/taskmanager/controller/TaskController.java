@@ -2,11 +2,15 @@ package com.taskmanager.controller;
 import com.taskmanager.controller.dto.TaskRequest;
 import com.taskmanager.controller.dto.TaskResponse;
 import com.taskmanager.controller.dto.TaskUpdateRequest;
+import com.taskmanager.mapper.TaskMapper;
 import com.taskmanager.model.Task;
 import com.taskmanager.model.TaskPriority;
 import com.taskmanager.model.TaskStatus;
 import com.taskmanager.service.TaskService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,11 +39,10 @@ public class TaskController {
     }
 
     @GetMapping
-    public ResponseEntity<List<TaskResponse>> getAllTasks() {
-        List<TaskResponse> responses = taskService.getAllTasks().stream()
-                .map(taskMapper::toResponse)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(responses);
+    public ResponseEntity<Page<TaskResponse>> getAllTasks(
+            @PageableDefault(page = 0, size = 10) Pageable pageable) {
+        Page<TaskResponse> page = taskService.getAllTasks(pageable).map(taskMapper::toResponse);
+        return ResponseEntity.ok(page);
     }
 
     @GetMapping("/{id:\\d+}")

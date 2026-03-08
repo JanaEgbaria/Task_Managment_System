@@ -6,6 +6,8 @@ import com.taskmanager.model.TaskPriority;
 import com.taskmanager.model.TaskStatus;
 import com.taskmanager.exception.ResourceNotFoundException;
 import com.taskmanager.repository.TaskRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -65,6 +67,11 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public List<Task> getAllTasks() {
         return taskRepository.findAll();
+    }
+
+    @Override
+    public Page<Task> getAllTasks(Pageable pageable) {
+        return taskRepository.findAll(pageable);
     }
 
     @Override

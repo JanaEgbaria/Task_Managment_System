@@ -526,7 +526,6 @@ src/main/java/com/taskmanager/
 ├── TaskManagerApplication.java      # Application entry point
 ├── controller/
 │   ├── TaskController.java          # REST endpoints
-│   ├── TaskMapper.java              # Entity ↔ DTO mapping
 │   └── dto/
 │       ├── TaskRequest.java         # Create/Update request DTO
 │       ├── TaskUpdateRequest.java   # Patch request DTO
@@ -536,6 +535,8 @@ src/main/java/com/taskmanager/
 │   └── TaskServiceImpl.java         # Service implementation
 ├── repository/
 │   └── TaskRepository.java          # Spring Data JPA repository
+├── mapper/
+│   └── TaskMapper.java              # Entity ↔ DTO mapping
 ├── model/
 │   ├── Task.java                    # JPA entity
 │   ├── TaskStatus.java              # Status enum

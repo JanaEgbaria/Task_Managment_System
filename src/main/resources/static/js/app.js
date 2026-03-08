@@ -151,7 +151,7 @@
       var opts = signal ? { signal: signal } : {};
       var data = await request(url, opts);
       if (signal && signal.aborted) return [];
-      var tasks = Array.isArray(data) ? data : [];
+      var tasks = (data && Array.isArray(data.content)) ? data.content : (Array.isArray(data) ? data : []);
 
       if (tasks.length === 0) {
         taskTbody.innerHTML = '';

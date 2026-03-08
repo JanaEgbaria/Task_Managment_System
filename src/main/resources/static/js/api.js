@@ -1,6 +1,16 @@
 const BASE_URL = '/api/tasks';
 
 /**
+ * Normalizes API response to a task array. GET /api/tasks returns a page { content, totalElements, ... };
+ * search and filter may return a plain array.
+ */
+function toTaskList(data) {
+  if (data && Array.isArray(data.content)) return data.content;
+  if (Array.isArray(data)) return data;
+  return [];
+}
+
+/**
  * Reads the response body at most once. For 204 No Content, returns null without reading.
  * For !response.ok, reads JSON once only if content-type is application/json, then throws.
  * For success, reads JSON once and returns it (or null if not JSON).
@@ -35,7 +45,8 @@ async function handleResponse(response) {
 }
 
 export async function getAllTasks() {
-  return handleResponse(await fetch(BASE_URL));
+  const data = await handleResponse(await fetch(BASE_URL));
+  return toTaskList(data);
 }
 
 export async function getTaskById(id) {
@@ -64,7 +75,8 @@ export async function deleteTask(id) {
 
 export async function searchTasks(title) {
   const url = `${BASE_URL}/search?title=${encodeURIComponent(title)}`;
-  return handleResponse(await fetch(url));
+  const data = await handleResponse(await fetch(url));
+  return toTaskList(data);
 }
 
 export async function filterTasks(status, priority) {
@@ -73,5 +85,6 @@ export async function filterTasks(status, priority) {
   if (priority != null && priority !== '') params.set('priority', priority);
   const query = params.toString();
   const url = query ? `${BASE_URL}/filter?${query}` : BASE_URL;
-  return handleResponse(await fetch(url));
+  const data = await handleResponse(await fetch(url));
+  return toTaskList(data);
 }

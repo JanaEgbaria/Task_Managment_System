@@ -10,9 +10,10 @@ A RESTful web application for managing tasks, built with Spring Boot 3 and Postg
 2. [Technologies Used](#technologies-used)
 3. [How to Run the Project](#how-to-run-the-project)
 4. [Database Configuration](#database-configuration)
-5. [API Documentation](#api-documentation)
-6. [Validation & Error Handling](#validation--error-handling)
-7. [Auditing](#auditing)
+5. [Authentication](#authentication)
+6. [API Documentation](#api-documentation)
+7. [Validation & Error Handling](#validation--error-handling)
+8. [Auditing](#auditing)
 
 ---
 
@@ -49,6 +50,8 @@ This application provides a complete task management solution with the following
 |-------------------|---------|----------------------------------|
 | Java              | 17      | Programming language             |
 | Spring Boot       | 3.2.x   | Application framework            |
+| Spring Security   | -       | Authentication and authorization |
+| JJWT              | 0.12.x  | JWT creation and validation      |
 | Spring Data JPA   | -       | Database persistence             |
 | PostgreSQL        | 15+     | Relational database              |
 | Flyway            | -       | Database migrations              |
@@ -83,12 +86,12 @@ This application provides a complete task management solution with the following
 
 3. **Configure database credentials**
 
-   Edit `src/main/resources/application.properties`:
+   Edit `src/main/resources/application.properties` (or set the `DB_PASSWORD` environment variable):
 
    ```properties
    spring.datasource.url=jdbc:postgresql://localhost:5432/task_manager
-   spring.datasource.username=your_username
-   spring.datasource.password=your_password
+   spring.datasource.username=postgres
+   spring.datasource.password=${DB_PASSWORD:postgres1234!}
    ```
 
 4. **Build the project**
@@ -120,10 +123,10 @@ The application uses PostgreSQL with Flyway for schema management.
 # Server
 server.port=8081
 
-# PostgreSQL
+# PostgreSQL (use DB_PASSWORD env var in production)
 spring.datasource.url=jdbc:postgresql://localhost:5432/task_manager
 spring.datasource.username=postgres
-spring.datasource.password=your_password
+spring.datasource.password=${DB_PASSWORD:postgres1234!}
 
 # Flyway migrations
 spring.flyway.enabled=true
@@ -133,8 +136,10 @@ spring.flyway.locations=classpath:db/migration
 
 # JPA
 spring.jpa.hibernate.ddl-auto=validate
-spring.jpa.show-sql=true
+spring.jpa.open-in-view=false
 ```
+
+For local development, you can enable SQL logging by activating the `dev` profile (e.g. `-Dspring.profiles.active=dev`). That loads `application-dev.properties`, which sets `spring.jpa.show-sql=true`.
 
 ### Schema Migrations
 
@@ -153,9 +158,108 @@ Flyway automatically runs migrations from `src/main/resources/db/migration/` on 
 
 ---
 
+## Authentication
+
+The API uses **JWT (JSON Web Token)** for authentication. All task endpoints under `/api/tasks/**` require a valid token. Public endpoints are used to obtain a token.
+
+### Register
+
+Create a new user account.
+
+```
+POST /api/auth/register
+Content-Type: application/json
+```
+
+**Request Body:**
+
+```json
+{
+  "username": "johndoe",
+  "email": "john@example.com",
+  "password": "secret123"
+}
+```
+
+**Validation:** `username` (2–50 chars), `email` (valid format), `password` (min 6 chars).
+
+**Response:** `201 Created`
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "type": "Bearer",
+  "username": "johndoe"
+}
+```
+
+**Error:** `409 Conflict` if username or email is already taken.
+
+---
+
+### Login
+
+Authenticate and receive a JWT.
+
+```
+POST /api/auth/login
+Content-Type: application/json
+```
+
+**Request Body:**
+
+```json
+{
+  "username": "johndoe",
+  "password": "secret123"
+}
+```
+
+**Response:** `200 OK`
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "type": "Bearer",
+  "username": "johndoe"
+}
+```
+
+**Error:** `401 Unauthorized` for invalid username or password.
+
+---
+
+### Using the Token
+
+Send the token in the `Authorization` header for all task API requests:
+
+```
+Authorization: Bearer <your_token>
+```
+
+Example:
+
+```
+GET /api/tasks
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+Without a valid token, requests to `/api/tasks/**` return `401 Unauthorized` or `403 Forbidden`.
+
+### Configuration
+
+JWT is configured in `application.properties` (or environment variables):
+
+- `app.jwt.secret` — signing key (min 32 characters for HS256). Override with `JWT_SECRET`.
+- `app.jwt.expiration-ms` — token lifetime in milliseconds. Override with `JWT_EXPIRATION_MS`.
+
+---
+
 ## API Documentation
 
 Base URL: `http://localhost:8081/api/tasks`
+
+All task endpoints require the `Authorization: Bearer <token>` header.
 
 ### Get All Tasks
 

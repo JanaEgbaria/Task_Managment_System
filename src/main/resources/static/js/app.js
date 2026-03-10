@@ -2,6 +2,7 @@
   'use strict';
 
   const API_BASE = 'http://localhost:8081/api/tasks';
+  const AUTH_BASE = 'http://localhost:8081/api/auth';
   const loadingSpinner = document.getElementById('loading-spinner');
   const tasksContainer = document.getElementById('tasks-container');
   const taskTbody = document.getElementById('task-tbody');
@@ -14,7 +15,16 @@
   const searchTitleInput = document.getElementById('search-title');
   const filterStatusSelect = document.getElementById('filter-status');
   const filterPrioritySelect = document.getElementById('filter-priority');
+  const authView = document.getElementById('auth-view');
+  const appView = document.getElementById('app-view');
+  const navAppActions = document.getElementById('nav-app-actions');
+  const navUsername = document.getElementById('nav-username');
+  const loginFormContainer = document.getElementById('login-form-container');
+  const registerFormContainer = document.getElementById('register-form-container');
+  const authCardTitle = document.getElementById('auth-card-title');
 
+  var authToken = null;
+  var authUsername = null;
   var searchAbortController = null;
   var SEARCH_DEBOUNCE_MS = 400;
   var lastInteraction = null;
@@ -81,17 +91,36 @@
   }
 
   async function request(url, options) {
+    var headers = { 'Content-Type': 'application/json', ...(options && options.headers) };
+    if (authToken) {
+      headers['Authorization'] = 'Bearer ' + authToken;
+    }
     const res = await fetch(url, {
-      headers: { 'Content-Type': 'application/json', ...(options && options.headers) },
+      headers: headers,
       ...options
     });
     const contentType = res.headers.get('content-type');
     const isJson = contentType && contentType.includes('application/json');
 
+    if (res.status === 401 || res.status === 403) {
+      authToken = null;
+      authUsername = null;
+      showAuthView();
+      showToast('Session expired. Please log in again.', 'error');
+      var msg = res.statusText;
+      if (isJson) {
+        try {
+          const body = await res.json();
+          if (body && typeof body.message === 'string') msg = body.message;
+        } catch (_) {}
+      }
+      throw new Error(msg);
+    }
+
     if (res.status === 204) return null;
 
     if (!res.ok) {
-      let message = res.statusText;
+      var message = res.statusText;
       if (isJson) {
         try {
           const body = await res.json();
@@ -103,6 +132,99 @@
 
     if (isJson) return await res.json();
     return null;
+  }
+
+  function showAuthView() {
+    if (authView) authView.classList.remove('d-none');
+    if (appView) appView.classList.add('d-none');
+    if (navAppActions) navAppActions.classList.add('d-none');
+    if (loginFormContainer) loginFormContainer.classList.remove('d-none');
+    if (registerFormContainer) registerFormContainer.classList.add('d-none');
+    if (authCardTitle) authCardTitle.textContent = 'Login';
+  }
+
+  function showAppView() {
+    if (authView) authView.classList.add('d-none');
+    if (appView) appView.classList.remove('d-none');
+    if (navAppActions) navAppActions.classList.remove('d-none');
+    if (navUsername) navUsername.textContent = authUsername ? 'Hello, ' + authUsername : '';
+  }
+
+  function showLoginForm() {
+    if (loginFormContainer) loginFormContainer.classList.remove('d-none');
+    if (registerFormContainer) registerFormContainer.classList.add('d-none');
+    if (authCardTitle) authCardTitle.textContent = 'Login';
+  }
+
+  function showRegisterForm() {
+    if (loginFormContainer) loginFormContainer.classList.add('d-none');
+    if (registerFormContainer) registerFormContainer.classList.remove('d-none');
+    if (authCardTitle) authCardTitle.textContent = 'Register';
+  }
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    var username = document.getElementById('login-username').value.trim();
+    var password = document.getElementById('login-password').value;
+    if (!username || !password) {
+      showToast('Please enter username and password', 'error');
+      return;
+    }
+    try {
+      var res = await fetch(AUTH_BASE + '/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: username, password: password })
+      });
+      var data = res.ok && res.headers.get('content-type') && res.headers.get('content-type').includes('application/json') ? await res.json() : null;
+      if (!res.ok) {
+        var msg = (data && data.message) ? data.message : res.statusText;
+        showToast(msg || 'Login failed', 'error');
+        return;
+      }
+      authToken = data && data.token ? data.token : null;
+      authUsername = data && data.username ? data.username : username;
+      showAppView();
+      fetchAllTasks();
+      showToast('Logged in successfully.', 'success');
+    } catch (err) {
+      showToast(err.message || 'Login failed', 'error');
+    }
+  }
+
+  async function handleRegister(e) {
+    e.preventDefault();
+    var username = document.getElementById('register-username').value.trim();
+    var email = document.getElementById('register-email').value.trim();
+    var password = document.getElementById('register-password').value;
+    if (!username || !email || !password) {
+      showToast('Please fill in all fields', 'error');
+      return;
+    }
+    if (password.length < 6) {
+      showToast('Password must be at least 6 characters', 'error');
+      return;
+    }
+    try {
+      var res = await fetch(AUTH_BASE + '/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: username, email: email, password: password })
+      });
+      var data = res.ok && res.headers.get('content-type') && res.headers.get('content-type').includes('application/json') ? await res.json() : null;
+      if (!res.ok) {
+        var msg = (data && data.message) ? data.message : res.statusText;
+        showToast(msg || 'Registration failed', 'error');
+        return;
+      }
+      authToken = data && data.token ? data.token : null;
+      authUsername = data && data.username ? data.username : username;
+      showAppView();
+      fetchAllTasks();
+      showToast('Account created. Welcome!', 'success');
+    } catch (err) {
+      showToast(err.message || 'Registration failed', 'error');
+    }
   }
 
   var VALID_STATUSES = ['TODO', 'IN_PROGRESS', 'DONE'];
@@ -181,7 +303,7 @@
         aborted = true;
         return [];
       }
-      showToast(e.message || 'Failed to load tasks', 'error');
+      if (authToken) showToast(e.message || 'Failed to load tasks', 'error');
       taskTbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Failed to load.</td></tr>';
       tasksContainer.classList.remove('d-none');
       return [];
@@ -296,6 +418,23 @@
   document.getElementById('btn-add-task').addEventListener('click', openModalForCreate);
   document.getElementById('btn-save-task').addEventListener('click', saveTask);
 
+  var btnLogout = document.getElementById('btn-logout');
+  if (btnLogout) btnLogout.addEventListener('click', function () {
+    authToken = null;
+    authUsername = null;
+    showAuthView();
+  });
+
+  var loginForm = document.getElementById('login-form');
+  if (loginForm) loginForm.addEventListener('submit', handleLogin);
+  var registerForm = document.getElementById('register-form');
+  if (registerForm) registerForm.addEventListener('submit', handleRegister);
+
+  var linkShowRegister = document.getElementById('link-show-register');
+  if (linkShowRegister) linkShowRegister.addEventListener('click', function (e) { e.preventDefault(); showRegisterForm(); });
+  var linkShowLogin = document.getElementById('link-show-login');
+  if (linkShowLogin) linkShowLogin.addEventListener('click', function (e) { e.preventDefault(); showLoginForm(); });
+
   var btnReset = document.getElementById('btn-reset-filters');
   if (btnReset) btnReset.addEventListener('click', resetFilters);
 
@@ -316,5 +455,10 @@
     filterPrioritySelect.addEventListener('change', function () { lastInteraction = 'filter'; fetchAllTasks(); });
   }
 
-  fetchAllTasks();
+  if (authToken) {
+    showAppView();
+    fetchAllTasks();
+  } else {
+    showAuthView();
+  }
 })();

@@ -11,10 +11,67 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold" href="/">Task Manager</a>
-            <button class="btn btn-light ms-auto" id="btn-add-task" type="button">+ Add Task</button>
+            <div id="nav-app-actions" class="ms-auto d-none d-flex align-items-center gap-2">
+                <span id="nav-username" class="text-white small me-2"></span>
+                <button class="btn btn-light" id="btn-add-task" type="button">+ Add Task</button>
+                <button class="btn btn-outline-light" id="btn-logout" type="button">Logout</button>
+            </div>
         </div>
     </nav>
 
+    <div id="auth-view">
+        <main class="container-fluid py-4">
+            <div class="row justify-content-center">
+                <div class="col-12 col-md-6 col-lg-5">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white py-3">
+                            <h5 class="mb-0 fw-semibold" id="auth-card-title">Login</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="login-form-container">
+                                <form id="login-form">
+                                    <div class="mb-3">
+                                        <label for="login-username" class="form-label">Username</label>
+                                        <input type="text" class="form-control" id="login-username" required autocomplete="username" placeholder="Your username">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="login-password" class="form-label">Password</label>
+                                        <input type="password" class="form-control" id="login-password" required autocomplete="current-password" placeholder="Password">
+                                    </div>
+                                    <button type="submit" class="btn btn-primary w-100 mb-2">Login</button>
+                                    <p class="text-muted small text-center mb-0">
+                                        Need an account? <a href="#" id="link-show-register">Register</a>
+                                    </p>
+                                </form>
+                            </div>
+                            <div id="register-form-container" class="d-none">
+                                <form id="register-form">
+                                    <div class="mb-3">
+                                        <label for="register-username" class="form-label">Username</label>
+                                        <input type="text" class="form-control" id="register-username" required minlength="2" maxlength="50" autocomplete="username" placeholder="Choose a username">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="register-email" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="register-email" required autocomplete="email" placeholder="your@email.com">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="register-password" class="form-label">Password</label>
+                                        <input type="password" class="form-control" id="register-password" required minlength="6" autocomplete="new-password" placeholder="At least 6 characters">
+                                    </div>
+                                    <button type="submit" class="btn btn-primary w-100 mb-2">Register</button>
+                                    <p class="text-muted small text-center mb-0">
+                                        Already have an account? <a href="#" id="link-show-login">Login</a>
+                                    </p>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="app-view" class="d-none">
     <main class="container-fluid py-4">
         <div id="loading-spinner" class="text-center py-5 d-none">
             <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
@@ -83,6 +140,7 @@
             <button class="btn btn-primary" id="btn-add-task-empty">+ Add Task</button>
         </div>
     </main>
+    </div>
 
     <!-- Task Modal (Create / Edit) -->
     <div class="modal fade" id="taskModal" tabindex="-1" aria-labelledby="taskModalLabel" aria-hidden="true">

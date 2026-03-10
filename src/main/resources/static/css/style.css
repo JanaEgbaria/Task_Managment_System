@@ -77,6 +77,18 @@ body {
   font-weight: 500;
 }
 
+#auth-view .card {
+  max-width: 24rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#auth-view a#link-show-register,
+#auth-view a#link-show-login {
+  text-decoration: none;
+  font-weight: 500;
+}
+
 @media (max-width: 768px) {
   .table-responsive {
     font-size: 0.875rem;
